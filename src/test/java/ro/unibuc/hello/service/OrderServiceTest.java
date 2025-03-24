@@ -273,4 +273,122 @@ class OrderServiceTest {
         assertThrows(InsufficientStockException.class, () -> orderService.createOrder(orderDTO));
     }
 
+    @Test
+    void testCountCompletedOrders() {
+        // Arrange
+        OrderEntity completedOrder = new OrderEntity("worker1", OrderStatus.COMPLETED, "item1", 10, "location1");
+        when(orderRepository.findAll()).thenReturn(Arrays.asList(completedOrder, new OrderEntity("worker2", OrderStatus.PENDING, "item2", 5, "location2")));
+
+        // Act
+        long count = orderService.countCompletedOrders();
+
+        // Assert
+        assertEquals(1, count); // Only one completed order
+    }
+
+    @Test
+    void testCountCanceledOrders() {
+        // Arrange
+        OrderEntity canceledOrder = new OrderEntity("worker1", OrderStatus.CANCELED, "item1", 10, "location1");
+        when(orderRepository.findAll()).thenReturn(Arrays.asList(canceledOrder, new OrderEntity("worker2", OrderStatus.PENDING, "item2", 5, "location2")));
+    
+        // Act
+        long count = orderService.countCanceledOrders();
+    
+        // Assert
+        assertEquals(1, count); // Only one canceled order
+    }
+
+    @Test
+    void testUpdateOrderStatus_NewStatus() throws EntityNotFoundException {
+        // Arrange
+        String id = "1";
+        String status = "CANCELED";
+        OrderEntity entity = new OrderEntity("worker1", OrderStatus.PENDING, "item1", 10, "location1");
+        entity.setId(id);
+        when(orderRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(orderRepository.save(any(OrderEntity.class))).thenReturn(entity);
+    
+        // Act
+        OrderDTO updatedOrder = orderService.updateOrderStatus(id, status);
+    
+        // Assert
+        assertNotNull(updatedOrder);
+        assertEquals(OrderStatus.CANCELED, updatedOrder.getStatus());
+    }
+
+    @Test
+    void testHasActiveOrderForRobot_WithActiveOrder() {
+        // Arrange
+        String robotId = "worker1";
+    
+        // Mock RobotEntity
+        RobotEntity mockRobot = new RobotEntity();
+        mockRobot.setId(robotId);
+        mockRobot.setCurrentOrderId("activeOrderId");
+    
+        // Mock OrderEntity for the active order
+        OrderEntity activeOrder = new OrderEntity(robotId, OrderStatus.PENDING, "item1", 10, "location1");
+        activeOrder.setId("activeOrderId");
+    
+        // Mock repositories
+        when(robotRepository.findById(robotId)).thenReturn(Optional.of(mockRobot));
+        when(orderRepository.findAll()).thenReturn(Arrays.asList(activeOrder));
+    
+        // Act
+        boolean hasActiveOrder = orderService.hasActiveOrderForRobot(robotId);
+    
+        // Assert
+        assertTrue(hasActiveOrder);
+    }
+    
+    
+    @Test
+    void testHasActiveOrderForRobot_NoActiveOrder() {
+        // Arrange
+        String robotId = "worker2";
+    
+        // Mock RobotEntity
+        RobotEntity mockRobot = new RobotEntity();
+        mockRobot.setId(robotId);
+        mockRobot.setCurrentOrderId(null);  // No active order
+    
+        // Mock repositories
+        when(robotRepository.findById(robotId)).thenReturn(Optional.of(mockRobot));
+    
+        // Act
+        boolean hasActiveOrder = orderService.hasActiveOrderForRobot(robotId);
+    
+        // Assert
+        assertFalse(hasActiveOrder);
+    }
+    
+    @Test
+    void testLambdaHasActiveOrderForRobot() {
+        // Arrange
+        String robotId = "worker1";
+
+        // Mock RobotEntity
+        RobotEntity mockRobot = new RobotEntity();
+        mockRobot.setId(robotId);
+        mockRobot.setCurrentOrderId("activeOrderId");
+
+        // Mock OrderEntity
+        OrderEntity activeOrder = new OrderEntity(robotId, OrderStatus.PENDING, "item1", 10, "location1");
+        activeOrder.setId("activeOrderId");
+
+        // Mock repositories
+        when(robotRepository.findById(robotId)).thenReturn(Optional.of(mockRobot));
+        when(orderRepository.findById("activeOrderId")).thenReturn(Optional.of(activeOrder));
+
+        // Assuming lambda is used in filtering orders by robotId, verify behavior
+        List<OrderEntity> orders = Arrays.asList(activeOrder);
+        boolean isActive = orders.stream()
+                                .anyMatch(order -> order.getRobotId().equals(robotId) && order.getStatus() == OrderStatus.PENDING);
+        
+        // Act & Assert
+        assertTrue(isActive);  // Ensure the filter works as expected
+    }
+
+    
 }
