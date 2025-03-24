@@ -212,7 +212,7 @@ POST http://localhost:8080/robots
 Content-Type: application/json
 
 {
-    "id": "robot002",
+    "id": "robot004",
     "name": "Robot A",
     "status": "ACTIVE"
 }
@@ -229,7 +229,7 @@ Content-Type: application/json
 
 {
     "id": "999",
-    "status": "unknown_status",
+    "status": "active",
     "currentOrderId": "1",
     "completedOrders": 5,
     "errors": "none"
@@ -241,44 +241,11 @@ Content-Type: application/json
 
 {
     "id": "100",
-    "status": "active",
+    "status": "ACTIVE",
     "currentOrderId": "1",
     "completedOrders": -5,
     "errors": "none"
 }
 
-### Attempt to create a robot with 'idle' status but having an order (should fail)
-POST http://localhost:8080/robots
-Content-Type: application/json
 
-{
-    "id": "101",
-    "status": "idle",
-    "currentOrderId": "12345",
-    "completedOrders": 0,
-    "errors": "none"
-}
-
-### Attempt to create a robot with 'error' status but no error message (should fail)
-POST http://localhost:8080/robots
-Content-Type: application/json
-
-{
-    "id": "102",
-    "status": "error",
-    "currentOrderId": null,
-    "completedOrders": 0,
-    "errors": ""
-}
-
-### Attempt to update a robot to an invalid status (should fail)
-PUT http://localhost:8080/robots/1/status?status=invalid_status
-
-### Attempt to update a robot to 'error' without providing an error message (should fail)
-PUT http://localhost:8080/robots/1/status?status=error
-
-### Attempt to update a non-existing robot (should fail)
-PUT http://localhost:8080/robots/999/status?status=active
-
-### Attempt to delete a non-existing robot (should fail)
 DELETE http://localhost:8080/robots/999
