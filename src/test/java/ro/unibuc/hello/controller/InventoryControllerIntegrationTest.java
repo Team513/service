@@ -27,10 +27,7 @@ public class InventoryControllerIntegrationTest {
     @Container
     public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.20")
             .withExposedPorts(27017)
-            .withEnv("MONGO_INITDB_ROOT_USERNAME", "root")
-            .withEnv("MONGO_INITDB_ROOT_PASSWORD", "example")
-            .withEnv("MONGO_INITDB_DATABASE", "testdb")
-            .withCommand("--auth");
+            .withSharding();
 
     @BeforeAll
     public static void setUp() {
@@ -44,7 +41,7 @@ public class InventoryControllerIntegrationTest {
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        final String MONGO_URL = "mongodb://root:example@localhost:";
+        final String MONGO_URL = "mongodb://localhost:";
         final String PORT = String.valueOf(mongoDBContainer.getMappedPort(27017));
         registry.add("mongodb.connection.url", () -> MONGO_URL + PORT);
     }
@@ -57,6 +54,17 @@ public class InventoryControllerIntegrationTest {
 
     @BeforeEach
     public void cleanUpAndAddTestData() {
+        // Clear the database to avoid duplicate entries
+        inventoryService.getAllInventoryItems().forEach(item -> {
+            try {
+                inventoryService.deleteInventoryItem(item.getItemId());
+            } catch (Exception e) {
+                // Log and ignore any exceptions during cleanup
+                System.err.println("Error during cleanup: " + e.getMessage());
+            }
+        });
+
+        // Add test data
         InventoryDTO item1 = new InventoryDTO("1", "Item 1", 100, 10);
         InventoryDTO item2 = new InventoryDTO("2", "Item 2", 50, 5);
 
@@ -79,7 +87,7 @@ public class InventoryControllerIntegrationTest {
         mockMvc.perform(get("/inventory/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.itemId").value("1"))
                 .andExpect(jsonPath("$.name").value("Item 1"));
     }
 
@@ -92,7 +100,7 @@ public class InventoryControllerIntegrationTest {
                 .content(new ObjectMapper().writeValueAsString(newItem)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value("3"))
+                .andExpect(jsonPath("$.itemId").value("3"))
                 .andExpect(jsonPath("$.name").value("Item 3"));
 
         mockMvc.perform(get("/inventory"))
@@ -108,7 +116,7 @@ public class InventoryControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.itemId").value("1"))
                 .andExpect(jsonPath("$.stock").value(150));
 
         mockMvc.perform(get("/inventory/1"))
