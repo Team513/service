@@ -1,7 +1,12 @@
 pipeline {
     agent any
+
+    tools {
+        jdk 'jdk21' 
+    }
+
     environment {
-        DOCKER_PASSWORD = credentials("docker_password")
+        DOCKER_PASSWORD = credentials("DockerPass")
     }
 
     stages {
