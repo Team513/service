@@ -112,7 +112,6 @@ public class RobotService {
 
 
     private void validateRobot(RobotDTO robotDTO) {
-        // Verify that the provided status is allowed
         if (robotDTO.getStatus() == null || !ALLOWED_STATUSES.contains(robotDTO.getStatus().toUpperCase())) {
             throw new ValidationException("Invalid status: " + robotDTO.getStatus());
         }

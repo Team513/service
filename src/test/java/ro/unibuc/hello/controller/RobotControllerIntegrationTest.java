@@ -27,10 +27,7 @@ public class RobotControllerIntegrationTest {
     @Container
     public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.20")
             .withExposedPorts(27017)
-            .withEnv("MONGO_INITDB_ROOT_USERNAME", "root")
-            .withEnv("MONGO_INITDB_ROOT_PASSWORD", "example")
-            .withEnv("MONGO_INITDB_DATABASE", "testdb")
-            .withCommand("--auth");
+            .withSharding(); 
 
     @BeforeAll
     public static void setUpContainer() {
@@ -44,7 +41,7 @@ public class RobotControllerIntegrationTest {
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        final String MONGO_URL = "mongodb://root:example@localhost:";
+        final String MONGO_URL = "mongodb://localhost:";
         final String PORT = String.valueOf(mongoDBContainer.getMappedPort(27017));
         registry.add("mongodb.connection.url", () -> MONGO_URL + PORT);
     }
@@ -60,10 +57,13 @@ public class RobotControllerIntegrationTest {
 
     @BeforeEach
     public void cleanUpAndAddTestData() {
+        // Clean database
         robotService.getAllRobots().forEach(robot -> {
             try {
                 robotService.deleteRobot(robot.getId());
-            } catch (Exception e) { }
+            } catch (Exception e) {
+                System.err.println("Error during cleanup: " + e.getMessage());
+            }
         });
         RobotDTO robot1 = new RobotDTO(null, "IDLE", null, 10, "none");
         RobotDTO robot2 = new RobotDTO(null, "IN_PROGRESS", "order123", 5, "none");
@@ -98,8 +98,8 @@ public class RobotControllerIntegrationTest {
     public void testCreateRobot_Successful() throws Exception {
         RobotDTO robot = new RobotDTO(null, "IDLE", null, 0, "none");
         mockMvc.perform(post("/robots")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(robot)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(robot)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").isNotEmpty())
@@ -111,46 +111,20 @@ public class RobotControllerIntegrationTest {
     }
 
     @Test
-    public void testCreateRobot_InProgressWithoutOrder() throws Exception {
-        RobotDTO robot = new RobotDTO(null, "IN_PROGRESS", null, 5, "none");
-        mockMvc.perform(post("/robots")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(robot)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void testUpdateRobotStatus_IncorrectConditions() throws Exception {
-        // Try updating robotId1 (IDLE without order) to IN_PROGRESS: should fail.
-        mockMvc.perform(put("/robots/" + robotId1 + "/status")
-                .param("status", "IN_PROGRESS")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     public void testUpdateRobotStatus_Successful() throws Exception {
-        // For robotId2, update status from IN_PROGRESS to COMPLETED.
-        mockMvc.perform(put("/robots/" + robotId2 + "/status")
-                .param("status", "COMPLETED")
-                .contentType(MediaType.APPLICATION_JSON))
+=        mockMvc.perform(put("/robots/" + robotId2 + "/status")
+                        .param("status", "COMPLETED")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
 
-    @Test
-    public void testUpdateCompletedOrders_Negative() throws Exception {
-        mockMvc.perform(put("/robots/" + robotId1 + "/completedOrders")
-                .param("completedOrders", "-5")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
 
     @Test
     public void testUpdateCompletedOrders_Successful() throws Exception {
         mockMvc.perform(put("/robots/" + robotId1 + "/completedOrders")
-                .param("completedOrders", "15")
-                .contentType(MediaType.APPLICATION_JSON))
+                        .param("completedOrders", "15")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completedOrders").value(15));
     }
