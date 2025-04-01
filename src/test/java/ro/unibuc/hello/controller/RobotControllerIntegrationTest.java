@@ -57,7 +57,6 @@ public class RobotControllerIntegrationTest {
 
     @BeforeEach
     public void cleanUpAndAddTestData() {
-        // Clean database
         robotService.getAllRobots().forEach(robot -> {
             try {
                 robotService.deleteRobot(robot.getId());
