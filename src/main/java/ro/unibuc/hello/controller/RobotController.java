@@ -35,6 +35,11 @@ public class RobotController {
         return robotService.updateRobotStatus(id, status);
     }
 
+    @PutMapping("/{id}/completedOrders")
+    public RobotDTO updateCompletedOrders(@PathVariable String id, @RequestParam Integer completedOrders) throws EntityNotFoundException {
+        return robotService.updateCompletedOrders(id, completedOrders);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteRobot(@PathVariable String id) throws EntityNotFoundException {
         robotService.deleteRobot(id);

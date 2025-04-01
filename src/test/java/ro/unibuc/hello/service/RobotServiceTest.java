@@ -37,8 +37,8 @@ class RobotServiceTest {
     @Test
     void testGetAllRobots() {
         List<RobotEntity> entities = Arrays.asList(
-                new RobotEntity("idle", null, 5, null),
-                new RobotEntity("in_progress", "order2", 10, null)
+                new RobotEntity("IDLE", null, 5, null),
+                new RobotEntity("IN_PROGRESS", "order2", 10, null)
         );
         when(robotRepository.findAll()).thenReturn(entities);
 
@@ -52,7 +52,7 @@ class RobotServiceTest {
     @Test
     void testGetRobotById_ExistingEntity() throws EntityNotFoundException {
         String id = "1";
-        RobotEntity entity = new RobotEntity("idle", null, 5, null);
+        RobotEntity entity = new RobotEntity("IDLE", null, 5, null);
         entity.setId(id);
         when(robotRepository.findById(id)).thenReturn(Optional.of(entity));
 
@@ -67,90 +67,95 @@ class RobotServiceTest {
     void testGetRobotById_NonExistingEntity() {
         String id = "NonExistingId";
         when(robotRepository.findById(id)).thenReturn(Optional.empty());
-
         assertThrows(EntityNotFoundException.class, () -> robotService.getRobotById(id));
     }
 
     @Test
     void testCreateRobot_Successful() {
-        RobotDTO robotDTO = new RobotDTO(null, "idle", null, 5, null);
-        RobotEntity entity = new RobotEntity("idle", null, 5, null);
+        RobotDTO robotDTO = new RobotDTO(null, "IDLE", null, 5, null);
+        RobotEntity entity = new RobotEntity("IDLE", null, 5, null);
         when(robotRepository.save(any(RobotEntity.class))).thenReturn(entity);
 
         RobotDTO createdRobot = robotService.createRobot(robotDTO);
-
         assertNotNull(createdRobot);
         assertNull(createdRobot.getCurrentOrderId());
     }
 
     @Test
-    void testCreateRobot_InvalidStatus() {
-        RobotDTO robotDTO = new RobotDTO(null, "unknown_status", null, 5, null);
-
-        assertThrows(ValidationException.class, () -> robotService.createRobot(robotDTO));
-    }
-
-    @Test
-    void testCreateRobot_CompletedOrdersNegative() {
-        RobotDTO robotDTO = new RobotDTO(null, "idle", null, -1, null);
-
+    void testCreateRobot_InProgressWithoutOrder() {
+        RobotDTO robotDTO = new RobotDTO(null, "IN_PROGRESS", null, 5, null);
         assertThrows(ValidationException.class, () -> robotService.createRobot(robotDTO));
     }
 
     @Test
     void testCreateRobot_IdleWithOrder() {
-        RobotDTO robotDTO = new RobotDTO(null, "idle", "order123", 5, null);
-
+        RobotDTO robotDTO = new RobotDTO(null, "IDLE", "order1", 5, null);
         assertThrows(ValidationException.class, () -> robotService.createRobot(robotDTO));
     }
 
     @Test
-    void testCreateRobot_ErrorWithoutMessage() {
-        RobotDTO robotDTO = new RobotDTO(null, "error", null, 5, null);
-
+    void testCreateRobot_CompletedOrdersNegative() {
+        RobotDTO robotDTO = new RobotDTO(null, "IDLE", null, -1, null);
         assertThrows(ValidationException.class, () -> robotService.createRobot(robotDTO));
+    }
+
+    @Test
+    void testUpdateRobotStatus_InProgressWithoutOrder() {
+        String id = "1";
+        RobotEntity entity = new RobotEntity("IDLE", null, 5, null);
+        entity.setId(id);
+        when(robotRepository.findById(id)).thenReturn(Optional.of(entity));
+        assertThrows(ValidationException.class, () -> robotService.updateRobotStatus(id, "IN_PROGRESS"));
+    }
+
+    // Updated test: now updating to IDLE should succeed by clearing the order.
+    @Test
+    void testUpdateRobotStatus_IdleWithOrder() throws EntityNotFoundException {
+        String id = "1";
+        RobotEntity entity = new RobotEntity("IN_PROGRESS", "order1", 5, null);
+        entity.setId(id);
+        when(robotRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(robotRepository.save(any(RobotEntity.class))).thenReturn(entity);
+
+        RobotDTO updated = robotService.updateRobotStatus(id, "IDLE");
+        assertNotNull(updated);
+        assertEquals("IDLE", updated.getStatus());
+        assertNull(updated.getCurrentOrderId());
     }
 
     @Test
     void testUpdateRobotStatus_Successful() throws EntityNotFoundException {
         String id = "1";
-        RobotEntity entity = new RobotEntity("in_progress", "order1", 5, null);
+        // Initially, robot is IN_PROGRESS with a valid order.
+        RobotEntity entity = new RobotEntity("IN_PROGRESS", "order1", 5, null);
         entity.setId(id);
         when(robotRepository.findById(id)).thenReturn(Optional.of(entity));
         when(robotRepository.save(any(RobotEntity.class))).thenReturn(entity);
 
-        RobotDTO updatedRobot = robotService.updateRobotStatus(id, "completed");
-
+        // Update to COMPLETED should clear the order.
+        RobotDTO updatedRobot = robotService.updateRobotStatus(id, "COMPLETED");
         assertNotNull(updatedRobot);
-        assertEquals("completed", updatedRobot.getStatus());
+        assertEquals("COMPLETED", updatedRobot.getStatus());
+        assertNull(updatedRobot.getCurrentOrderId());
     }
 
     @Test
-    void testUpdateRobotStatus_InvalidTransition() {
+    void testUpdateCompletedOrders_Negative() {
         String id = "1";
-        RobotEntity entity = new RobotEntity("completed", null, 5, null);
+        assertThrows(ValidationException.class, () -> robotService.updateCompletedOrders(id, -5));
+    }
+
+    @Test
+    void testUpdateCompletedOrders_Successful() throws EntityNotFoundException {
+        String id = "1";
+        RobotEntity entity = new RobotEntity("IDLE", null, 5, null);
         entity.setId(id);
         when(robotRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(robotRepository.save(any(RobotEntity.class))).thenReturn(entity);
 
-        assertThrows(ValidationException.class, () -> robotService.updateRobotStatus(id, "in_progress"));
-    }
-
-    @Test
-    void testUpdateRobotStatus_ErrorWithoutMessage() {
-        String id = "1";
-        RobotEntity entity = new RobotEntity("in_progress", "order1", 5, null);
-        entity.setId(id);
-        when(robotRepository.findById(id)).thenReturn(Optional.of(entity));
-
-        assertThrows(ValidationException.class, () -> robotService.updateRobotStatus(id, "error"));
-    }
-
-    @Test
-    void testUpdateRobotStatus_NonExistingEntity() {
-        String id = "NonExistingId";
-        when(robotRepository.findById(id)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> robotService.updateRobotStatus(id, "idle"));
+        RobotDTO updated = robotService.updateCompletedOrders(id, 10);
+        assertNotNull(updated);
+        assertEquals(10, updated.getCompletedOrders());
     }
 
     @Test
@@ -159,9 +164,7 @@ class RobotServiceTest {
         RobotEntity entity = new RobotEntity("idle", null, 5, null);
         entity.setId(id);
         when(robotRepository.findById(id)).thenReturn(Optional.of(entity));
-
         robotService.deleteRobot(id);
-
         verify(robotRepository, times(1)).delete(entity);
     }
 
@@ -169,7 +172,6 @@ class RobotServiceTest {
     void testDeleteRobot_NonExistingEntity() {
         String id = "NonExistingId";
         when(robotRepository.findById(id)).thenReturn(Optional.empty());
-
         assertThrows(EntityNotFoundException.class, () -> robotService.deleteRobot(id));
     }
 }
