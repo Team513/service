@@ -20,22 +20,11 @@ pipeline {
         stage('Tag image') {
             steps {
                 script {
-                    sh 'git fetch --tags'
-
-                    def lastTag = sh(script: "git tag | sort -V | tail -1", returnStdout: true).trim()
-                    if (lastTag == "") {
-                        env.MAJOR_VERSION = "1"
-                        env.MINOR_VERSION = "0"
-                        env.PATCH_VERSION = "0"
-                    } else {
-                        def parts = lastTag.tokenize('.')
-                        env.MAJOR_VERSION = parts[0]
-                        env.MINOR_VERSION = parts[1]
-                        env.PATCH_VERSION = parts[2]
-                    }
-
-                    def nextMinor = Integer.parseInt(env.MINOR_VERSION) + 1
-                    env.IMAGE_TAG = "${env.MAJOR_VERSION}.${nextMinor}.${env.PATCH_VERSION}"
+                    sh([script: 'git fetch --tag', returnStdout: true]).trim()
+                    env.MAJOR_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 1', returnStdout: true]).trim()
+                    env.MINOR_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 2', returnStdout: true]).trim()
+                    env.PATCH_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 3', returnStdout: true]).trim()
+                    env.IMAGE_TAG = "${env.MAJOR_VERSION}.\$((${env.MINOR_VERSION} + 1)).${env.PATCH_VERSION}"
                 }
 
                 sh "docker build -t ${DOCKER_CREDENTIALS_USR}/hello-img:${IMAGE_TAG} ."
