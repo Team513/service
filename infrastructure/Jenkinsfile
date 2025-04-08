@@ -14,7 +14,6 @@ pipeline {
                 sh './gradlew clean build'
             }
         }
-    }
 
     stage('Tag image') {
       steps {
@@ -27,4 +26,7 @@ pipeline {
         sh "docker build -t bogdancomardici/hello-img:${MAJOR_VERSION}.\$((${MINOR_VERSION} + 1)).${PATCH_VERSION} ."
       }
 }
+    }
+
+    
 }
