@@ -24,6 +24,8 @@ pipeline {
             PATCH_VERSION = sh([script: 'git tag | cut -d . -f 3', returnStdout: true]).trim()
         }
         sh "docker build -t bogdancomardici/hello-img:${MAJOR_VERSION}.\$((${MINOR_VERSION} + 1)).${PATCH_VERSION} ."
+        sh "docker login -u bogdancomardici -p ${DOCKER_PASSWORD}"
+        sh "docker push bogdancomardici/hello-img:${MAJOR_VERSION}.\$((${MINOR_VERSION} + 1)).${PATCH_VERSION}"
       }
 }
     }
