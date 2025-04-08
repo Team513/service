@@ -34,5 +34,11 @@ pipeline {
                 sh "git push https://${GITHUB_TOKEN}@github.com/Team513/service.git ${IMAGE_TAG}"
             }
         }
+
+        stage('Deploy Containers') {
+            steps {
+                sh "IMAGE_TAG=${IMAGE_TAG} docker compose up -d hello mongo"
+            }
+        }
     }
 }
