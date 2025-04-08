@@ -28,11 +28,10 @@ pipeline {
                     env.IMAGE_TAG = "${env.MAJOR_VERSION}.\$((${env.MINOR_VERSION} + 1)).${env.PATCH_VERSION}"
                 }
                 sh "docker build -t ${DOCKER_USERNAME}/hello-img:${MAJOR_VERSION}.\$((${MINOR_VERSION} + 1)).${PATCH_VERSION} ."
+                sh "git tag ${env.IMAGE_TAG}"
+                sh "git push https://$GITHUB_TOKEN@github.com/Team513/service.git ${env.IMAGE_TAG}"
             }
         }
-
-        sh "git tag ${env.IMAGE_TAG}"
-        sh "git push https://$GITHUB_TOKEN@github.com/${DOCKER_PASSWORD_USR}/service.git ${env.IMAGE_TAG}"
     }
 
 
