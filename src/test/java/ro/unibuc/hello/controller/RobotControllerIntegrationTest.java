@@ -44,7 +44,7 @@ public class RobotControllerIntegrationTest {
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        final String MONGO_URL = "mongodb://root:example@localhost:";
+        final String MONGO_URL = "mongodb://root:example@host.docker.internal:";
         final String PORT = String.valueOf(mongoDBContainer.getMappedPort(27017));
         registry.add("mongodb.connection.url", () -> MONGO_URL + PORT);
     }
