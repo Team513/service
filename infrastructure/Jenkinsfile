@@ -39,7 +39,7 @@ pipeline {
         stage('Docker Compose') {
             steps {
                 script {
-                    sh "IMAGE_TAG=${env.IMAGE_TAG} && docker compose up -d hello mongo"
+                    sh "IMAGE_TAG=${env.IMAGE_TAG} docker compose up -d hello mongo"
                 }
             }
         }
