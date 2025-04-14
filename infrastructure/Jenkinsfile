@@ -31,7 +31,7 @@ pipeline {
 
 
                     sh "git tag ${env.IMAGE_TAG}"
-                    sh "git push https://$GITHUB_TOKEN@github.com/${DOCKER_PASSWORD_USR}/service.git ${env.IMAGE_TAG}"
+                    sh "git push https://$GITHUB_TOKEN@github.com/bogdancomardici/service.git ${env.IMAGE_TAG}"
                 }
             }
         }
