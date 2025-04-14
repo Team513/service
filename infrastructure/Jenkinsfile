@@ -19,19 +19,19 @@ pipeline {
         stage('Tag image') {
             steps {
                 script {
-                    sh 'git fetch --tag'
-                    def GIT_TAG = sh(script: 'git tag | sort --version-sort | tail -1', returnStdout: true).trim()
-                    def MAJOR_VERSION = GIT_TAG.split('\\.')[0]
-                    def MINOR_VERSION = GIT_TAG.split('\\.')[1].toInteger()
-                    def PATCH_VERSION = GIT_TAG.split('\\.')[2]
-                    def IMAGE_TAG = "${MAJOR_VERSION}.${MINOR_VERSION + 1}.${PATCH_VERSION}"
+                    sh([script: 'git fetch --tag', returnStdout: true]).trim()
+                    env.MAJOR_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 1', returnStdout: true]).trim()
+                    env.MINOR_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 2', returnStdout: true]).trim()
+                    env.PATCH_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 3', returnStdout: true]).trim()
+                    env.IMAGE_TAG = "${env.MAJOR_VERSION}.\$((${env.MINOR_VERSION} + 1)).${env.PATCH_VERSION}"
 
                     sh "docker build -t bogdancomardici/hello-img:${IMAGE_TAG} ."
                     sh "echo ${DOCKER_PASSWORD} | docker login -u bogdancomardici --password-stdin"
                     sh "docker push bogdancomardici/hello-img:${IMAGE_TAG}"
 
-                    sh "git tag ${IMAGE_TAG}"
-                    sh "git push https://${GITHUB_TOKEN}@github.com/bogdancomardici/service.git ${IMAGE_TAG}"
+
+                    sh "git tag ${env.IMAGE_TAG}"
+                    sh "git push https://$GITHUB_TOKEN@github.com/${DOCKER_PASSWORD_USR}/service.git ${env.IMAGE_TAG}"
                 }
             }
         }
@@ -40,9 +40,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        #!/bin/bash
-                        IMAGE_TAG=${IMAGE_TAG}
-                        docker compose up -d hello mongo
+                        IMAGE_TAG=${env.IMAGE_TAG} && docker compose up -d hello mongo
                     '''
                 }
             }
