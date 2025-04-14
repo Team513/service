@@ -41,7 +41,7 @@ pipeline {
                 script {
                     sh '''
                         #!/bin/bash
-                        IMAGE_TAG=${env.IMAGE_TAG}
+                        IMAGE_TAG=${IMAGE_TAG}
                         docker compose up -d hello mongo
                     '''
                 }
