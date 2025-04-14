@@ -27,18 +27,15 @@ public class RobotControllerIntegrationTest {
     @Container
     public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.20")
             .withExposedPorts(27017)
-            .withEnv("MONGO_INITDB_ROOT_USERNAME", "root")
-            .withEnv("MONGO_INITDB_ROOT_PASSWORD", "example")
-            .withEnv("MONGO_INITDB_DATABASE", "testdb")
-            .withCommand("--auth");
+            .withSharding();
 
     @BeforeAll
-    public static void setUpContainer() {
+    public static void setUp() {
         mongoDBContainer.start();
     }
 
     @AfterAll
-    public static void tearDownContainer() {
+    public static void tearDown() {
         mongoDBContainer.stop();
     }
 
