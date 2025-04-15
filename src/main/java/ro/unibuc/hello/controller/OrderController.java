@@ -23,22 +23,22 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
    
-    @Timed(value = "orders.getAll.time", description = "Time taken to fetch all orders")
-    @Counted(value = "orders.getAll.count", description = "Number of times all orders were fetched")
+    @Timed(value = "orders_getAll_time", description = "Time taken to fetch all orders")
+    @Counted(value = "orders_getAll_count", description = "Number of times all orders were fetched")
     @GetMapping
     public List<OrderDTO> getAllOrders() {
         return orderService.getAllOrders();
     }
 
-    @Timed(value = "orders.getById.time", description = "Time taken to fetch an order by ID")
-    @Counted(value = "orders.getById.count", description = "Number of times an order was fetched by ID")
+    @Timed(value = "orders_getById_time", description = "Time taken to fetch an order by ID")
+    @Counted(value = "orders_getById_count", description = "Number of times an order was fetched by ID")
     @GetMapping("/{id}")
     public OrderDTO getOrderById(@PathVariable String id) throws EntityNotFoundException {
         return orderService.getOrderById(id);
     }
 
-    @Timed(value = "orders.create.time", description = "Time taken to create an order")
-    @Counted(value = "orders.create.count", description = "Number of times an order was created")
+    @Timed(value = "orders_create_time", description = "Time taken to create an order")
+    @Counted(value = "orders_create_count", description = "Number of times an order was created")
     @PostMapping
     public OrderDTO createOrder(@Valid @RequestBody OrderDTO orderDTO) {
         if (orderService.hasActiveOrderForRobot(orderDTO.getRobotId())) {
@@ -47,8 +47,8 @@ public class OrderController {
         return orderService.createOrder(orderDTO);
     }
 
-    @Timed(value = "orders.updateStatus.time", description = "Time taken to update an order's status")
-    @Counted(value = "orders.updateStatus.count", description = "Number of times an order's status was updated")
+    @Timed(value = "orders_updateStatus_time", description = "Time taken to update an order's status")
+    @Counted(value = "orders_updateStatus_count", description = "Number of times an order's status was updated")
     @PutMapping("/{id}/status")
     public OrderDTO updateOrderStatus(@PathVariable String id, @RequestBody Map<String, String> body) throws EntityNotFoundException {
         String status = body.get("status");
@@ -66,8 +66,8 @@ public class OrderController {
 
     
 
-    @Timed(value = "orders.delete.time", description = "Time taken to delete an order")
-    @Counted(value = "orders.delete.count", description = "Number of times an order was deleted")
+    @Timed(value = "orders_delete_time", description = "Time taken to delete an order")
+    @Counted(value = "orders_delete_count", description = "Number of times an order was deleted")
     @DeleteMapping("/{id}")
     public void deleteOrder(@PathVariable String id) throws EntityNotFoundException {
         orderService.deleteOrder(id);

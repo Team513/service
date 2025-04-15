@@ -35,7 +35,7 @@ public class OrderService {
 
     public List<OrderDTO> getAllOrders() {
         logger.info("Fetching all orders...");
-        metricsRegistry.counter("orders.getAll.counter", "endpoint", "getAllOrders").increment();
+        metricsRegistry.counter("orders_getAll_counter", "endpoint", "getAllOrders").increment();
         List<OrderEntity> entities = orderRepository.findAll();
         logger.debug("Fetched {} orders", entities.size());
 
@@ -73,7 +73,7 @@ public class OrderService {
 
     public OrderDTO createOrder(OrderDTO orderDTO) {
         logger.info("Creating order with robotId: {}", orderDTO.getRobotId());
-        metricsRegistry.counter("orders.create.counter", "endpoint", "createOrder").increment();
+        metricsRegistry.counter("orders_create_counter", "endpoint", "createOrder").increment();
         // Check if the robot exists
         RobotEntity robot = robotRepository.findById(orderDTO.getRobotId())
                 .orElseThrow(() -> {
@@ -135,7 +135,7 @@ public class OrderService {
 
     public OrderDTO updateOrderStatus(String id, String status) {
         logger.info("Updating order {} status to {}", id, status);
-        metricsRegistry.counter("orders.updateStatus.counter", "endpoint", "updateOrderStatus").increment();
+        metricsRegistry.counter("orders_updateStatus_counter", "endpoint", "updateOrderStatus").increment();
 
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> {
@@ -169,7 +169,7 @@ public class OrderService {
 
     public void deleteOrder(String id) {
         logger.info("Deleting order with ID: {}", id);
-        metricsRegistry.counter("orders.delete.counter", "endpoint", "deleteOrder").increment();
+        metricsRegistry.counter("orders_delete_counter", "endpoint", "deleteOrder").increment();
 
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> {
