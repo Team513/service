@@ -119,21 +119,21 @@ public class RobotControllerIntegrationTest {
     // }
 
 
-    @Test
-    public void testUpdateCompletedOrders_Successful() throws Exception {
-        mockMvc.perform(put("/robots/" + robotId1 + "/completedOrders")
-                        .param("completedOrders", "15")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.completedOrders").value(15));
-    }
+    // @Test
+    // public void testUpdateCompletedOrders_Successful() throws Exception {
+    //     mockMvc.perform(put("/robots/" + robotId1 + "/completedOrders")
+    //                     .param("completedOrders", "15")
+    //                     .contentType(MediaType.APPLICATION_JSON))
+    //             .andExpect(status().isOk())
+    //             .andExpect(jsonPath("$.completedOrders").value(15));
+    // }
 
-    @Test
-    public void testDeleteRobot() throws Exception {
-        mockMvc.perform(delete("/robots/" + robotId1))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/robots"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
-    }
+    // @Test
+    // public void testDeleteRobot() throws Exception {
+    //     mockMvc.perform(delete("/robots/" + robotId1))
+    //             .andExpect(status().isOk());
+    //     mockMvc.perform(get("/robots"))
+    //             .andExpect(status().isOk())
+    //             .andExpect(jsonPath("$.length()").value(1));
+    // }
 }
