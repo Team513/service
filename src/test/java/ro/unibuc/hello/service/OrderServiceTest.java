@@ -63,7 +63,7 @@ class OrderServiceTest {
         // Arrange
 
         Counter counterMock = Mockito.mock(Counter.class);
-        when(metricsRegistry.counter("orders.getAll.counter", "endpoint", "getAllOrders")).thenReturn(counterMock);
+        when(metricsRegistry.counter("orders_getAll_counter", "endpoint", "getAllOrders")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
 
         List<OrderEntity> entities = Arrays.asList(
@@ -112,7 +112,7 @@ class OrderServiceTest {
     void testCreateOrder() {
         // Arrange
         Counter counterMock = Mockito.mock(Counter.class);
-        when(metricsRegistry.counter("orders.create.counter", "endpoint", "createOrder")).thenReturn(counterMock);
+        when(metricsRegistry.counter("orders_create_counter", "endpoint", "createOrder")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
 
         OrderDTO orderDTO = new OrderDTO(null, "worker1", OrderStatus.PENDING, "item1", 10, "location1");
