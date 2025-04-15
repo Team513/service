@@ -13,6 +13,8 @@ import ro.unibuc.hello.dto.OrderDTO;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import io.micrometer.core.instrument.MeterRegistry;
+
 
 @Service
 public class OrderService {
@@ -28,8 +30,12 @@ public class OrderService {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+    @Autowired
+    private MeterRegistry metricsRegistry;
+
     public List<OrderDTO> getAllOrders() {
         logger.info("Fetching all orders...");
+        metricsRegistry.counter("orders.getAll.counter", "endpoint", "getAllOrders").increment();
         List<OrderEntity> entities = orderRepository.findAll();
         logger.debug("Fetched {} orders", entities.size());
 
@@ -47,6 +53,7 @@ public class OrderService {
 
     public OrderDTO getOrderById(String id) {
         logger.info("Fetching order with ID: {}", id);
+        
         OrderEntity entity = orderRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.warn("Order with ID {} not found", id);
@@ -66,7 +73,7 @@ public class OrderService {
 
     public OrderDTO createOrder(OrderDTO orderDTO) {
         logger.info("Creating order with robotId: {}", orderDTO.getRobotId());
-
+        metricsRegistry.counter("orders.create.counter", "endpoint", "createOrder").increment();
         // Check if the robot exists
         RobotEntity robot = robotRepository.findById(orderDTO.getRobotId())
                 .orElseThrow(() -> {
@@ -128,6 +135,7 @@ public class OrderService {
 
     public OrderDTO updateOrderStatus(String id, String status) {
         logger.info("Updating order {} status to {}", id, status);
+        metricsRegistry.counter("orders.updateStatus.counter", "endpoint", "updateOrderStatus").increment();
 
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> {
@@ -161,6 +169,7 @@ public class OrderService {
 
     public void deleteOrder(String id) {
         logger.info("Deleting order with ID: {}", id);
+        metricsRegistry.counter("orders.delete.counter", "endpoint", "deleteOrder").increment();
 
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> {

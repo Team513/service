@@ -23,6 +23,9 @@ import ro.unibuc.hello.exception.InvalidQuantityException;
 import ro.unibuc.hello.exception.ItemNotFoundException;
 import ro.unibuc.hello.exception.RobotBusyException;
 import ro.unibuc.hello.exception.RobotNotFoundException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +47,9 @@ class OrderServiceTest {
     @Mock
     private InventoryRepository inventoryRepository;
 
+    @Mock
+    private MeterRegistry metricsRegistry;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -55,6 +61,11 @@ class OrderServiceTest {
     @Test
     void testGetAllOrders() {
         // Arrange
+
+        Counter counterMock = Mockito.mock(Counter.class);
+        when(metricsRegistry.counter("orders.getAll.counter", "endpoint", "getAllOrders")).thenReturn(counterMock);
+        doNothing().when(counterMock).increment();
+
         List<OrderEntity> entities = Arrays.asList(
                 new OrderEntity("worker1", OrderStatus.PENDING, "item1", 10, "location1"),
                 new OrderEntity("worker2", OrderStatus.COMPLETED, "item2", 20, "location2")
@@ -100,6 +111,10 @@ class OrderServiceTest {
     @Test
     void testCreateOrder() {
         // Arrange
+        Counter counterMock = Mockito.mock(Counter.class);
+        when(metricsRegistry.counter("orders.create.counter", "endpoint", "createOrder")).thenReturn(counterMock);
+        doNothing().when(counterMock).increment();
+
         OrderDTO orderDTO = new OrderDTO(null, "worker1", OrderStatus.PENDING, "item1", 10, "location1");
     
         // Mock RobotEntity
