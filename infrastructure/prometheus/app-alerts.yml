@@ -18,3 +18,43 @@ groups:
         annotations:
           summary: Increased info retrieval rate {{ $labels.value}} {{ $value }}
           description: "A container has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      # Availability Alert
+      - alert: CRITICAL-OrderServiceDown
+        expr: absent(orders_getAll_count_total) 
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Order service is unavailable"
+          description: "No requests have been processed by the Order service in the last minute. Investigate service availability."
+
+      # Performance Alert
+      - alert: WARNING-HighOrderProcessingTime
+        expr: histogram_quantile(0.95, rate(orders_create_time_bucket[5m])) > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High order processing time"
+          description: "95th percentile of order creation time exceeds 2 seconds. Investigate potential performance bottlenecks."
+
+      # Quality Alert
+      - alert: WARNING-HighOrderFailureRate
+        expr: increase(http_server_requests_total{status=~"5.."}[5m]) / increase(http_server_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High failure rate in Order service"
+          description: "More than 5% of requests to the Order service are failing with 5xx errors. Investigate potential issues."
+
+      # High Request Rate Alert
+      - alert: WARNING-HighGetOrdersRequestRate
+        expr: increase(orders_getAll_count_total[1m]) > 10
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request rate for Get Orders"
+          description: "More than 10 requests to the Get Orders endpoint in the last minute. Investigate potential unusual activity."
